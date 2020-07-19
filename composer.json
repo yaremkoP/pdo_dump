@@ -1,0 +1,16 @@
+{
+    "name": "pavlo_yaremko/pdo_dump",
+    "authors": [
+        {
+            "name": "Pavlo Yaremko",
+            "email": "Pavlo_Yaremko@epam.com"
+        }
+    ],
+    "require": {
+        "symfony/console": "^5.1",
+        "ext-pdo": "*"
+    },
+    "autoload": {
+        "psr-4": {"App\\": "src/"}
+    }
+}
