@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Adapter\File;
+namespace App\Writer;
 
 interface DumpWriterInterface
 {

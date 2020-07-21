@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Adapter\File;
+namespace App\Writer;
 
-class FsWriter implements DumpWriterInterface
+class Writer implements DumpWriterInterface
 {
     /**
      * @var string File path

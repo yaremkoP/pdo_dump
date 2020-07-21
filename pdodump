@@ -4,10 +4,10 @@
 require __DIR__ . '/vendor/autoload.php';
 
 use Symfony\Component\Console\Application;
-use App\Command\MysqlDump;
+use App\Command\DumpCommand;
 
 $app = new Application('PDO sql dump tool', '1.0.0');
 
-$app->add(new MysqlDump);
+$app->add(new DumpCommand());
 
 $app->run();

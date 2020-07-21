@@ -3,21 +3,21 @@
 namespace App\Reader;
 
 use App\Adapter\DB\PDOInterface;
-use App\Adapter\File\DumpWriterInterface;
+use App\Writer\DumpWriterInterface;
 use PDO;
 use PDOStatement;
 
 class SQLReader
 {
     /**
-     * @var PDOInterface
+     * @var PDO
      */
-    protected $pdo;
+    protected PDO $pdo;
 
     /**
      * @var DumpWriterInterface
      */
-    protected $writer;
+    protected DumpWriterInterface $writer;
 
     /**
      * SQLReader constructor.
@@ -27,14 +27,14 @@ class SQLReader
      */
     public function __construct(PDOInterface $pdo, DumpWriterInterface $writer)
     {
-        $this->pdo    = $pdo;
+        $this->pdo    = $pdo->getPDO();
         $this->writer = $writer;
     }
 
     public function dump()
     {
         $tables = [];
-        $query  = $this->pdo->getPDO()->query('SHOW TABLES');
+        $query  = $this->pdo->query('SHOW TABLES');
         while ($row = $query->fetch(PDO::FETCH_NUM)) {
             $tables[] = $row[0];
         }
@@ -48,7 +48,7 @@ class SQLReader
 
         foreach ($tables as $table) {
             /** @var PDOStatement $query */
-            $query       = $this->pdo->getPDO()->query('SELECT * FROM `' . $table . '`');
+            $query       = $this->pdo->query('SELECT * FROM `' . $table . '`');
             $num_columns = $query->columnCount();
             $num_rows    = $query->rowCount();
 
@@ -57,7 +57,7 @@ class SQLReader
 
             // CREATE TABLE statement
             /** @var PDOStatement $query_create_st */
-            $query_create_st = $this->pdo->getPDO()->query('SHOW CREATE TABLE `' . $table . '`');
+            $query_create_st = $this->pdo->query('SHOW CREATE TABLE `' . $table . '`');
             $row             = $query_create_st->fetch(PDO::FETCH_NUM);
 
             $out .= $row[1] . ';' . "\n\n";
