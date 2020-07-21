@@ -27,6 +27,7 @@ class MysqlAdapter extends BaseAdapter implements PDOInterface
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_EMULATE_PREPARES   => true,
             PDO::ATTR_CURSOR             => PDO::CURSOR_FWDONLY,
+            PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false // for avoiding memory limit, use unbuffered query.
         ];
 
         parent::__construct($host, $database, $username, $password);

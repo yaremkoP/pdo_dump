@@ -48,30 +48,38 @@ class SQLReader
 
         foreach ($tables as $table) {
             /** @var PDOStatement $query */
-            $query       = $this->pdo->query('SELECT * FROM `' . $table . '`');
-            $num_columns = $query->columnCount();
-            $num_rows    = $query->rowCount();
+            $query    = $this->pdo->query('SELECT COUNT(*) FROM `' . $table . '`');
+            $num_rows = $query->fetch(PDO::FETCH_NUM)[0];
+            $query->closeCursor();
 
             // DROP TABLE IF EXISTS statement
             $out .= 'DROP TABLE IF EXISTS `' . $table . '`;' . "\n\n";
 
             // CREATE TABLE statement
-            /** @var PDOStatement $query_create_st */
-            $query_create_st = $this->pdo->query('SHOW CREATE TABLE `' . $table . '`');
-            $row             = $query_create_st->fetch(PDO::FETCH_NUM);
+            /** @var PDOStatement $query */
+            $query = $this->pdo->query('SHOW CREATE TABLE `' . $table . '`');
+            $row   = $query->fetch(PDO::FETCH_NUM);
+            $query->closeCursor();
 
             $out .= $row[1] . ';' . "\n\n";
 
+            // write buffered string into file
+            $this->writer->write($out);
+            $out = '';
+
             // INSERT INTO statements
-            if($num_rows) {
-                $out .= 'INSERT INTO `'. $table . '` VALUES';
+            if ($num_rows) {
+                $query       = $this->pdo->query('SELECT * FROM `' . $table . '`');
+                $num_columns = $query->columnCount();
+
+                $out .= 'INSERT INTO `' . $table . '` VALUES';
 
                 $this->writer->write($out);
                 $out = '';
 
                 $count = 0;
                 while ($row = $query->fetch(PDO::FETCH_NUM)) {
-                    $out .= '(';
+                    $out = '(';
                     for ($i = 0; $i < $num_columns; $i++) {
                         $row[$i] = addslashes($row[$i]);
                         $row[$i] = preg_replace("/\n/us", "\\n", $row[$i]);
@@ -93,6 +101,7 @@ class SQLReader
                         $out .= ");\n";
                     }
 
+                    // write buffered string into file
                     $this->writer->write($out);
                     $out = '';
                 }
@@ -101,6 +110,7 @@ class SQLReader
             $query->closeCursor();
         }
 
+        // write buffered string into file
         $this->writer->write($out);
     }
 }
