@@ -1,13 +1,12 @@
 <?php
 
-namespace App\Reader;
+namespace App\Generator;
 
 use App\Adapter\DB\PDOInterface;
-use App\Writer\DumpWriterInterface;
 use PDO;
 use PDOStatement;
 
-class SQLReader
+class SQLGenerator
 {
     /**
      * @var PDO
@@ -15,22 +14,18 @@ class SQLReader
     protected PDO $pdo;
 
     /**
-     * @var DumpWriterInterface
-     */
-    protected DumpWriterInterface $writer;
-
-    /**
      * SQLReader constructor.
      *
      * @param PDOInterface $pdo
-     * @param DumpWriterInterface $writer
      */
-    public function __construct(PDOInterface $pdo, DumpWriterInterface $writer)
+    public function __construct(PDOInterface $pdo)
     {
-        $this->pdo    = $pdo->getPDO();
-        $this->writer = $writer;
+        $this->pdo = $pdo->getPDO();
     }
 
+    /**
+     * @return bool|\Generator
+     */
     public function dump()
     {
         $tables = [];
@@ -43,9 +38,6 @@ class SQLReader
             return false;
         }
 
-        /** @var string $out Holder for dump output */
-        $out = '';
-
         foreach ($tables as $table) {
             /** @var PDOStatement $query */
             $query    = $this->pdo->query('SELECT COUNT(*) FROM `' . $table . '`');
@@ -53,7 +45,7 @@ class SQLReader
             $query->closeCursor();
 
             // DROP TABLE IF EXISTS statement
-            $out .= 'DROP TABLE IF EXISTS `' . $table . '`;' . "\n\n";
+            $out = 'DROP TABLE IF EXISTS `' . $table . '`;' . "\n\n";
 
             // CREATE TABLE statement
             /** @var PDOStatement $query */
@@ -62,55 +54,43 @@ class SQLReader
             $query->closeCursor();
 
             $out .= $row[1] . ';' . "\n\n";
-
-            // write buffered string into file
-            $this->writer->write($out);
-            $out = '';
+            yield $out;
 
             // INSERT INTO statements
             if ($num_rows) {
                 $query       = $this->pdo->query('SELECT * FROM `' . $table . '`');
                 $num_columns = $query->columnCount();
 
-                $out .= 'INSERT INTO `' . $table . '` VALUES';
-
-                $this->writer->write($out);
-                $out = '';
+                yield 'INSERT INTO `' . $table . '` VALUES';
 
                 $count = 0;
                 while ($row = $query->fetch(PDO::FETCH_NUM)) {
-                    $out = '(';
+                    $row = '(';
                     for ($i = 0; $i < $num_columns; $i++) {
                         $row[$i] = addslashes($row[$i]);
                         $row[$i] = preg_replace("/\n/us", "\\n", $row[$i]);
                         if (isset($row[$i])) {
-                            $out .= '"' . $row[$i] . '"';
+                            $row .= '"' . $row[$i] . '"';
                         } else {
-                            $out .= '""';
+                            $row .= '""';
                         }
                         if ($i < ($num_columns - 1)) {
-                            $out .= ',';
+                            $row .= ',';
                         }
                     }
 
                     $count++;
 
                     if ($count < $num_rows) {
-                        $out .= '),';
+                        $row .= '),';
                     } else {
-                        $out .= ");\n";
+                        $row .= ");\n";
                     }
 
-                    // write buffered string into file
-                    $this->writer->write($out);
-                    $out = '';
+                    yield $row;
                 }
             }
-            $out .= "\n\n\n";
             $query->closeCursor();
         }
-
-        // write buffered string into file
-        $this->writer->write($out);
     }
 }

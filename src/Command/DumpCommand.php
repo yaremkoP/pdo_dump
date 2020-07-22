@@ -5,7 +5,7 @@ namespace App\Command;
 use App\Adapter\DB\PDOInterface;
 use App\Writer\Writer;
 use App\Helper;
-use App\Reader\SQLReader;
+use App\Generator\SQLGenerator;
 use PDOException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -46,9 +46,9 @@ class DumpCommand extends Command
             return Command::FAILURE;
         }
 
-        $writer     = new Writer($file);
-        $sql_reader = new SQLReader($db_adapter, $writer);
-        $sql_reader->dump();
+        $writer    = new Writer($file,);
+        $generator = new SQLGenerator($db_adapter);
+        $writer->write($generator->dump());
 
         $output->writeln('<info>Dump DB start...</info>');
 

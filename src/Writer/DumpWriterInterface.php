@@ -2,16 +2,16 @@
 
 namespace App\Writer;
 
+use Generator;
+
 interface DumpWriterInterface
 {
     /**
      * Write declaration
      *
-     * @param string $out
-     *
-     * @return bool
+     * @param Generator $generator
      */
-    public function write(string $out):bool;
+    public function write(Generator $generator);
 
     /**
      * Set path for writing file

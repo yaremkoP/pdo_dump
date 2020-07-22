@@ -2,6 +2,9 @@
 
 namespace App\Writer;
 
+use App\Generator\SQLGenerator;
+use Generator;
+
 class Writer implements DumpWriterInterface
 {
     /**
@@ -28,9 +31,11 @@ class Writer implements DumpWriterInterface
     /**
      * @inheritDoc
      */
-    public function write(string $out): bool
+    public function write(Generator $generator)
     {
-        return fwrite($this->resource, $out);
+        foreach ($generator as $line) {
+            fwrite($this->resource, $line);
+        }
     }
 
     /**
